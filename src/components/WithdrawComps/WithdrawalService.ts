@@ -18,7 +18,7 @@ export const fetchWithdrawalRequests = async (): Promise<{
     if (response.data.success) {
       const withdrawals = response.data.data.map(withdrawal => ({
         ...withdrawal,
-        status: Math.random() > 0.3 ? "pending" as "pending" : Math.random() > 0.5 ? "approved" as "approved" : "rejected" as "rejected",
+        status: Math.random() > 0.3 ? "pending" as const : Math.random() > 0.5 ? "approved" as const : "rejected" as const,
         payment_method: ["Bank Transfer", "PayPal", "Crypto"][Math.floor(Math.random() * 3)],
         payment_details: ["HDFC Bank", "user@example.com", "Bitcoin (BTC)"][Math.floor(Math.random() * 3)]
       }))

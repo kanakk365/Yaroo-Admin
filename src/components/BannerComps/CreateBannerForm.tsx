@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Trash2, Upload } from "lucide-react";
 import { uploadFile } from "@/lib/client-upload";
+import Image from "next/image";
 
 interface CreateBannerFormProps {
   onCancel: () => void;
@@ -222,10 +223,13 @@ export default function CreateBannerForm({ onCancel, onSubmit }: CreateBannerFor
             >
               {previewImage ? (
                 <div className="relative w-full h-full">
-                  <img
+                  <Image
                     src={previewImage}
                     alt="Banner preview"
-                    className="w-full h-full object-contain"
+                    fill
+                    className="object-contain"
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    priority
                   />
                   <button
                     className="absolute top-2 right-2 bg-white p-1 rounded-full shadow-md"

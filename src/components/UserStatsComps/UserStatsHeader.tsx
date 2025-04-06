@@ -5,6 +5,8 @@ import { TimeFilterProps } from "./types"
 interface UserStatsHeaderProps extends TimeFilterProps {
   title: string;
   description: string;
+  timeFilter: string;
+  setTimeFilter: (value: string) => void;
 }
 
 export default function UserStatsHeader({ 
