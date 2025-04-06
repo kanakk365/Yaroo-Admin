@@ -5,7 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { LayoutDashboard, ImageIcon, HelpCircle, BarChart3, Wallet, LogOut, Menu, X } from "lucide-react"
+import { ImageIcon, HelpCircle, BarChart3, Wallet, LogOut, Menu, X } from "lucide-react"
 import { useMobile } from "@/hooks/use-mobile"
 
 interface LayoutProps {

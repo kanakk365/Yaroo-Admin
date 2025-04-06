@@ -35,8 +35,14 @@ export default function UserStats({ isActive }: UserStatsProps) {
       } else {
         throw new Error(response.data.message || "Error fetching user statistics");
       }
-    } catch (err: any) {
-      setError(err.message || "Failed to fetch user stats");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        setError(err.response?.data?.message || err.message || "Failed to fetch user stats");
+      } else if (err instanceof Error) {
+        setError(err.message || "Failed to fetch user stats");
+      } else {
+        setError("Failed to fetch user stats");
+      }
       console.error("Error fetching user stats:", err);
     } finally {
       setLoading(false);

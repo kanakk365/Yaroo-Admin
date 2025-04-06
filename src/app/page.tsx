@@ -1,14 +1,11 @@
 "use client"
-import { useRouter } from "next/navigation"
 import Login from "@/components/Login"
 import Dashboard from "@/components/DashboardWrapper"
 import { useAuth } from "@/hooks/use-auth"
 
 export default function Home() {
   const { isAuthenticated, loading } = useAuth()
-  const router = useRouter()
 
-  // Show loading state while checking authentication
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-100">
@@ -17,12 +14,10 @@ export default function Home() {
     )
   }
 
-  // Show login page if not authenticated
   if (!isAuthenticated) {
     return <Login />
   }
 
-  // Show dashboard if authenticated
   return <Dashboard />
 }
 
