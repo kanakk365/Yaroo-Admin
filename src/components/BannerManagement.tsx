@@ -1,42 +1,45 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Upload, Eye } from "lucide-react"
-import axios from "axios"
+import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Upload, Eye } from "lucide-react";
+import axios from "axios";
 
-import BannerGrid from "./BannerComps/BannerGrid"
-import CreateBannerForm from "./BannerComps/CreateBannerForm"
-import EditBannerModal from "./BannerComps/EditBannerModal"
-import { Banner } from "./BannerComps/types"
+import BannerGrid from "./BannerComps/BannerGrid";
+import CreateBannerForm from "./BannerComps/CreateBannerForm";
+import EditBannerModal from "./BannerComps/EditBannerModal";
+import { Banner } from "./BannerComps/types";
 
 interface BannerManagementProps {
-  isActive: boolean
+  isActive: boolean;
 }
 
 export default function BannerManagement({ isActive }: BannerManagementProps) {
-  const [isUploadAreaVisible, setIsUploadAreaVisible] = useState(false)
-  const [banners, setBanners] = useState<Banner[]>([])
-  const [filteredBanners, setFilteredBanners] = useState<Banner[]>([])
-  const [searchQuery, setSearchQuery] = useState("")
-  const [filterStatus, setFilterStatus] = useState("all")
-  
-  const [isEditModalVisible, setIsEditModalVisible] = useState(false)
-  const [editingBanner, setEditingBanner] = useState<Banner | null>(null)
-  
+  const [isUploadAreaVisible, setIsUploadAreaVisible] = useState(false);
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [filteredBanners, setFilteredBanners] = useState<Banner[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+
+  const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+  const [editingBanner, setEditingBanner] = useState<Banner | null>(null);
+
   useEffect(() => {
     fetchBanners();
   }, []);
 
   const fetchBanners = async () => {
     try {
-      const response = await axios.get("http://localhost:3000/v1/admin/banners", {
-        headers: {
-          'X-Karma-Admin-Auth': 'sdbsdbjdasdabhjbjahbjbcj8367'
-        }
-      });
-      
+      const response = await axios.get(
+        "https://yaro-6000-karma.offline.coffeecodes.in/v1/admin/banners",
+        {
+          headers: {
+            "X-Karma-Admin-Auth": "sdbsdbjdasdabhjbjahbjbcj8367",
+          },
+        },
+      );
+
       if (response.data.success) {
         setBanners(response.data.data);
         setFilteredBanners(response.data.data);
@@ -52,20 +55,20 @@ export default function BannerManagement({ isActive }: BannerManagementProps) {
       setFilteredBanners([]);
       alert("Failed to fetch banners. Please try again.");
     }
-  }
+  };
 
   const filterBanners = (query: string, status: string) => {
     let result = banners;
 
     if (query) {
-      result = result.filter(banner =>
-        banner.name.toLowerCase().includes(query.toLowerCase())
+      result = result.filter((banner) =>
+        banner.name.toLowerCase().includes(query.toLowerCase()),
       );
     }
 
     if (status !== "all") {
       const isActive = status === "active";
-      result = result.filter(banner => banner.active === isActive);
+      result = result.filter((banner) => banner.active === isActive);
     }
 
     setFilteredBanners(result);
@@ -85,25 +88,25 @@ export default function BannerManagement({ isActive }: BannerManagementProps) {
     if (!dateString || dateString === "0001-01-01T00:00:00Z") return "Not set";
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
+      year: "numeric",
+      month: "short",
+      day: "numeric",
     });
   };
 
   const formatDateTimeForInput = (dateString: string) => {
-    if (!dateString || dateString === "0001-01-01T00:00:00Z") return ""
-    const date = new Date(dateString)
-    return new Date(date.getTime() - (date.getTimezoneOffset() * 60000))
+    if (!dateString || dateString === "0001-01-01T00:00:00Z") return "";
+    const date = new Date(dateString);
+    return new Date(date.getTime() - date.getTimezoneOffset() * 60000)
       .toISOString()
-      .slice(0, 16)
-  }
+      .slice(0, 16);
+  };
 
   const handleStatusToggle = (bannerId: string, currentStatus: boolean) => {
-    const updatedBanners = banners.map(banner =>
+    const updatedBanners = banners.map((banner) =>
       banner.banner_id === bannerId
         ? { ...banner, active: !currentStatus }
-        : banner
+        : banner,
     );
     setBanners(updatedBanners);
     filterBanners(searchQuery, filterStatus);
@@ -121,22 +124,22 @@ export default function BannerManagement({ isActive }: BannerManagementProps) {
   const handleCreateBanner = async (newBanner: Partial<Banner>) => {
     try {
       const response = await axios.post(
-        "http://localhost:3000/v1/admin/banners", 
+        "https://yaro-6000-karma.offline.coffeecodes.in/v1/admin/banners",
         newBanner,
         {
           headers: {
-            'X-Karma-Admin-Auth': 'sdbsdbjdasdabhjbjahbjbcj8367'
-          }
-        }
+            "X-Karma-Admin-Auth": "sdbsdbjdasdabhjbjahbjbcj8367",
+          },
+        },
       );
-      
+
       if (response.data.success) {
         const createdBanner = response.data.data;
-        setBanners(prev => [createdBanner, ...prev]);
+        setBanners((prev) => [createdBanner, ...prev]);
         filterBanners(searchQuery, filterStatus);
-        
+
         setIsUploadAreaVisible(false);
-        
+
         alert("Banner created successfully!");
       } else {
         alert(`Failed to create banner: ${response.data.message}`);
@@ -150,21 +153,23 @@ export default function BannerManagement({ isActive }: BannerManagementProps) {
   const handleUpdateBanner = async (updatedBanner: Banner) => {
     try {
       const response = await axios.post(
-        "http://localhost:3000/v1/admin/banners/update", 
+        "https://yaro-6000-karma.offline.coffeecodes.in/v1/admin/banners/update",
         updatedBanner,
         {
-          headers:{
-            'X-Karma-Admin-Auth': 'sdbsdbjdasdabhjbjahbjbcj8367'
-          }
-        }
+          headers: {
+            "X-Karma-Admin-Auth": "sdbsdbjdasdabhjbjahbjbcj8367",
+          },
+        },
       );
-      
+
       if (response.data.success) {
-        setBanners(prev => 
-          prev.map(b => b.banner_id === updatedBanner.banner_id ? updatedBanner : b)
+        setBanners((prev) =>
+          prev.map((b) =>
+            b.banner_id === updatedBanner.banner_id ? updatedBanner : b,
+          ),
         );
         filterBanners(searchQuery, filterStatus);
-        
+
         alert("Banner updated successfully!");
       } else {
         alert(`Failed to update banner: ${response.data.message}`);
@@ -179,22 +184,24 @@ export default function BannerManagement({ isActive }: BannerManagementProps) {
     if (!confirm("Are you sure you want to delete this banner?")) {
       return;
     }
-    
+
     try {
       const response = await axios.post(
-        "http://localhost:3000/v1/admin/banners/delete", 
+        "https://yaro-6000-karma.offline.coffeecodes.in/v1/admin/banners/delete",
         { banner_id: bannerId },
         {
-          headers:{
-            'X-Karma-Admin-Auth': 'sdbsdbjdasdabhjbjahbjbcj8367'
-          }
-        }
+          headers: {
+            "X-Karma-Admin-Auth": "sdbsdbjdasdabhjbjahbjbcj8367",
+          },
+        },
       );
-      
+
       if (response.data.success) {
-        setBanners(prev => prev.filter(banner => banner.banner_id !== bannerId));
+        setBanners((prev) =>
+          prev.filter((banner) => banner.banner_id !== bannerId),
+        );
         filterBanners(searchQuery, filterStatus);
-        
+
         alert("Banner deleted successfully!");
       } else {
         alert(`Failed to delete banner: ${response.data.message}`);
@@ -217,8 +224,12 @@ export default function BannerManagement({ isActive }: BannerManagementProps) {
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">Banner Management</h2>
-            <p className="text-gray-600 mt-1">Upload, edit and manage your website banners</p>
+            <h2 className="text-2xl font-bold text-gray-800">
+              Banner Management
+            </h2>
+            <p className="text-gray-600 mt-1">
+              Upload, edit and manage your website banners
+            </p>
           </div>
           <Button
             className="mt-4 md:mt-0 bg-[#4FB372] hover:bg-[#3d9059]"
@@ -230,9 +241,9 @@ export default function BannerManagement({ isActive }: BannerManagementProps) {
         </div>
 
         {isUploadAreaVisible && (
-          <CreateBannerForm 
-            onCancel={handleCancelCreation} 
-            onSubmit={handleCreateBanner} 
+          <CreateBannerForm
+            onCancel={handleCancelCreation}
+            onSubmit={handleCreateBanner}
           />
         )}
 
@@ -257,8 +268,12 @@ export default function BannerManagement({ isActive }: BannerManagementProps) {
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-500">Total Banners</h3>
-                  <p className="text-2xl font-semibold text-gray-800">{banners.length}</p>
+                  <h3 className="text-sm font-medium text-gray-500">
+                    Total Banners
+                  </h3>
+                  <p className="text-2xl font-semibold text-gray-800">
+                    {banners.length}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -270,7 +285,9 @@ export default function BannerManagement({ isActive }: BannerManagementProps) {
                   <Eye className="h-6 w-6" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-500">Banner Views</h3>
+                  <h3 className="text-sm font-medium text-gray-500">
+                    Banner Views
+                  </h3>
                   <p className="text-2xl font-semibold text-gray-800">8.5K</p>
                 </div>
               </div>
@@ -296,7 +313,9 @@ export default function BannerManagement({ isActive }: BannerManagementProps) {
                   </svg>
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-sm font-medium text-gray-500">Click Rate</h3>
+                  <h3 className="text-sm font-medium text-gray-500">
+                    Click Rate
+                  </h3>
                   <p className="text-2xl font-semibold text-gray-800">3.2%</p>
                 </div>
               </div>
@@ -304,7 +323,7 @@ export default function BannerManagement({ isActive }: BannerManagementProps) {
           </Card>
         </div>
 
-        <BannerGrid 
+        <BannerGrid
           banners={filteredBanners}
           onSearch={handleSearch}
           onFilterChange={handleFilterChange}
@@ -325,5 +344,5 @@ export default function BannerManagement({ isActive }: BannerManagementProps) {
         />
       )}
     </div>
-  )
+  );
 }
