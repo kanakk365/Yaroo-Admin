@@ -5,7 +5,7 @@ import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { ImageIcon, HelpCircle, BarChart3, Wallet, LogOut, Menu, X } from "lucide-react"
+import { ImageIcon, HelpCircle, BarChart3, Wallet, LogOut, Menu, X, Box } from "lucide-react"
 import { useMobile } from "@/hooks/use-mobile"
 
 interface LayoutProps {
@@ -98,6 +98,21 @@ export function Layout({ children, activeSection, setActiveSection, onLogout }: 
                   }`}
                 />
                 Withdrawal Requests
+              </button>
+            </li>
+            <li className="px-5 py-3">
+              <button
+                onClick={() => handleSectionChange("products")}
+                className={`flex items-center w-full text-left ${
+                  activeSection === "products" ? "text-[#4FB372]" : "text-gray-700 hover:text-[#4FB372]"
+                } transition-colors group`}
+              >
+                <Box
+                  className={`h-5 w-5 mr-3 ${
+                    activeSection === "products" ? "text-[#4FB372]" : "text-gray-500 group-hover:text-[#4FB372]"
+                  }`}
+                />
+                Products
               </button>
             </li>
           </ul>

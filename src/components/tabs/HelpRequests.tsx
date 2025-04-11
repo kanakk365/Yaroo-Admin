@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react"
-import { HelpRequest } from "./HelpRequestsComps/types"
-import { HelpRequestsService } from "./HelpRequestsComps/HelpRequestsService"
-import HelpRequestsHeader from "./HelpRequestsComps/HelpRequestsHeader"
-import HelpRequestsStats from "./HelpRequestsComps/HelpRequestsStats"
-import HelpRequestsTable from "./HelpRequestsComps/HelpRequestsTable"
-import ViewHelpRequestModal from "./HelpRequestsComps/ViewHelpRequestModal"
+import { HelpRequest } from "../HelpRequestsComps/types"
+import { HelpRequestsService } from "../HelpRequestsComps/HelpRequestsService"
+import HelpRequestsHeader from "../HelpRequestsComps/HelpRequestsHeader"
+import HelpRequestsStats from "../HelpRequestsComps/HelpRequestsStats"
+import HelpRequestsTable from "../HelpRequestsComps/HelpRequestsTable"
+import ViewHelpRequestModal from "../HelpRequestsComps/ViewHelpRequestModal"
 
 interface HelpRequestsProps {
   isActive: boolean

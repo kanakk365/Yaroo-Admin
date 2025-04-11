@@ -6,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Upload, Eye } from "lucide-react";
 import axios from "axios";
 
-import BannerGrid from "./BannerComps/BannerGrid";
-import CreateBannerForm from "./BannerComps/CreateBannerForm";
-import EditBannerModal from "./BannerComps/EditBannerModal";
-import { Banner } from "./BannerComps/types";
+import BannerGrid from "../BannerComps/BannerGrid";
+import CreateBannerForm from "../BannerComps/CreateBannerForm";
+import EditBannerModal from "../BannerComps/EditBannerModal";
+import { Banner } from "../BannerComps/types";
 
 interface BannerManagementProps {
   isActive: boolean;

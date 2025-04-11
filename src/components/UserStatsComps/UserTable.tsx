@@ -1,10 +1,13 @@
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, Eye } from "lucide-react"
+import { Search, Eye, Bell } from "lucide-react"
 import { User, UserStatsData } from "./types"
 import { useState } from "react"
 import UserDetailsModal from "./UserDetailsModal"
+import NotificationModal from "./NoficationModal"
+
+
 
 interface UserTableProps {
   statsData: UserStatsData | null;
@@ -15,6 +18,7 @@ export default function UserTable({ statsData }: UserTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [ notifyModalOpen, setNotifyModalOpen] = useState(false)
   const itemsPerPage = 10
   
   const filteredUsers = statsData?.users.filter(user => {
@@ -44,6 +48,12 @@ export default function UserTable({ statsData }: UserTableProps) {
   const handleViewUser = (user: User) => {
     setSelectedUser(user)
     setModalOpen(true)
+  }
+
+  const handleNotifyUser= (user:User)=>{
+    setSelectedUser(user)
+    setNotifyModalOpen(true)
+    console.log(notifyModalOpen)
   }
 
   return (
@@ -138,6 +148,13 @@ export default function UserTable({ statsData }: UserTableProps) {
                           onClick={() => handleViewUser(user)}
                         >
                           <Eye className="h-5 w-5" />
+                        </button>
+                        <button 
+                          className="text-[#4FB372] hover:text-[#3d9059]" 
+                          title="View User Details"
+                          onClick={() => handleNotifyUser(user)}
+                        >
+                          <Bell className="h-5 w-5" />
                         </button>
                       </div>
                     </td>
@@ -241,6 +258,11 @@ export default function UserTable({ statsData }: UserTableProps) {
         user={selectedUser} 
         open={modalOpen} 
         onOpenChange={setModalOpen} 
+      />
+      <NotificationModal
+      user={selectedUser} 
+      open={notifyModalOpen} 
+      onOpenChange={setNotifyModalOpen} 
       />
     </>
   )

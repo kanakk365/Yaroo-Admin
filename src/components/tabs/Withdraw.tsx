@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react"
-import WithdrawalHeader from "./WithdrawComps/WithdrawalHeader"
-import WithdrawalStats from "./WithdrawComps/WithdrawalStats"
-import WithdrawalTable from "./WithdrawComps/WithdrawalTable"
-import { WithdrawalRequest, WithdrawalProps } from "./WithdrawComps/types"
-import { fetchWithdrawalRequests } from "./WithdrawComps/WithdrawalService"
+import WithdrawalHeader from "../WithdrawComps/WithdrawalHeader"
+import WithdrawalStats from "../WithdrawComps/WithdrawalStats"
+import WithdrawalTable from "../WithdrawComps/WithdrawalTable"
+import { WithdrawalRequest, WithdrawalProps } from "../WithdrawComps/types"
+import { fetchWithdrawalRequests } from "../WithdrawComps/WithdrawalService"
 
 export default function Withdrawal({ isActive }: WithdrawalProps) {
   const [withdrawalRequests, setWithdrawalRequests] = useState<WithdrawalRequest[]>([])
