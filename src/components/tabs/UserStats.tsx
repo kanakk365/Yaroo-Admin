@@ -4,6 +4,7 @@ import UserStatsHeader from "@/components/UserStatsComps/UserStatsHeader";
 import UserMetricCards from "@/components/UserStatsComps/UserMetricCards";
 import UserTable from "@/components/UserStatsComps/UserTable";
 import { UserStatsData } from "@/components/UserStatsComps/types";
+import { apiRoute, getAuthHeaders } from "@/lib/server";
 
 interface UserStatsProps {
   isActive: boolean;
@@ -25,11 +26,9 @@ export default function UserStats({ isActive }: UserStatsProps) {
     try {
       setLoading(true);
       const response = await axios.get(
-        "https://yaro-6000-karma.offline.coffeecodes.in/v1/admin/users",
+        `${apiRoute}/v1/admin/users`,
         {
-          headers: {
-            "X-Karma-Admin-Auth": "sdbsdbjdasdabhjbjahbjbcj8367",
-          },
+          headers: getAuthHeaders(),
         },
       );
 

@@ -1,10 +1,9 @@
-
-
 import { useState } from "react"
 import axios from "axios"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { apiRoute, getAuthHeaders } from "@/lib/server"
 
 interface ProductsProps {
     isActive: boolean;
@@ -28,14 +27,11 @@ export default function Products({ isActive }: ProductsProps) {
         try {
             setLoading(true)
             setMessage(null)
-              const response = await axios.post(
-                "https://yaro-6000-karma.offline.coffeecodes.in/v1/admin/products",
+            const response = await axios.post(
+                `${apiRoute}/v1/admin/products`,
                 { productUrl },
                 {
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-Karma-Admin-Auth": "sdbsdbjdasdabhjbjahbjbcj8367"
-                    }
+                    headers: getAuthHeaders()
                 }
             )
             

@@ -1,7 +1,8 @@
 import axios from "axios";
 import { HelpRequest, HelpRequestResponse } from "./types";
+import { apiRoute, getAuthHeaders } from "../../lib/server"
 
-const API_BASE_URL = "https://yaro-6000-karma.offline.coffeecodes.in/v1/admin";
+const API_BASE_URL = `${apiRoute}/v1/admin`;
 const AUTH_TOKEN = "sdbsdbjdasdabhjbjahbjbcj8367";
 
 export const HelpRequestsService = {
@@ -10,9 +11,7 @@ export const HelpRequestsService = {
       const response = await axios.get<HelpRequestResponse>(
         `${API_BASE_URL}/help`,
         {
-          headers: {
-            "X-Karma-Admin-Auth": AUTH_TOKEN,
-          },
+          headers: getAuthHeaders()
         },
       );
 
@@ -37,9 +36,7 @@ export const HelpRequestsService = {
   deleteHelpRequest: async (requestId: string): Promise<boolean> => {
     try {
       const response = await axios.delete(`${API_BASE_URL}/help/${requestId}`, {
-        headers: {
-          "X-Karma-Admin-Auth": AUTH_TOKEN,
-        },
+        headers: getAuthHeaders()
       });
 
       return response.data.success;

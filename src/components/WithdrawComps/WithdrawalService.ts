@@ -1,5 +1,6 @@
 import axios from "axios";
 import { WithdrawalResponse, WithdrawalRequest } from "./types";
+import { apiRoute, getAuthHeaders } from "@/lib/server";
 
 export const fetchWithdrawalRequests = async (): Promise<{
   withdrawals: WithdrawalRequest[];
@@ -7,11 +8,9 @@ export const fetchWithdrawalRequests = async (): Promise<{
 }> => {
   try {
     const response = await axios.get<WithdrawalResponse>(
-      "https://yaro-6000-karma.offline.coffeecodes.in/v1/admin/withdrawals",
+      `${apiRoute}/v1/admin/withdrawals`,
       {
-        headers: {
-          "X-Karma-Admin-Auth": "sdbsdbjdasdabhjbjahbjbcj8367",
-        },
+        headers: getAuthHeaders(),
       },
     );
 

@@ -10,6 +10,7 @@ import BannerGrid from "../BannerComps/BannerGrid";
 import CreateBannerForm from "../BannerComps/CreateBannerForm";
 import EditBannerModal from "../BannerComps/EditBannerModal";
 import { Banner } from "../BannerComps/types";
+import { apiRoute, getAuthHeaders } from "@/lib/server";
 
 interface BannerManagementProps {
   isActive: boolean;
@@ -32,11 +33,9 @@ export default function BannerManagement({ isActive }: BannerManagementProps) {
   const fetchBanners = async () => {
     try {
       const response = await axios.get(
-        "https://yaro-6000-karma.offline.coffeecodes.in/v1/admin/banners",
+        `${apiRoute}/v1/admin/banners`,
         {
-          headers: {
-            "X-Karma-Admin-Auth": "sdbsdbjdasdabhjbjahbjbcj8367",
-          },
+          headers: getAuthHeaders(),
         },
       );
 
@@ -124,12 +123,10 @@ export default function BannerManagement({ isActive }: BannerManagementProps) {
   const handleCreateBanner = async (newBanner: Partial<Banner>) => {
     try {
       const response = await axios.post(
-        "https://yaro-6000-karma.offline.coffeecodes.in/v1/admin/banners",
+        `${apiRoute}/v1/admin/banners`,
         newBanner,
         {
-          headers: {
-            "X-Karma-Admin-Auth": "sdbsdbjdasdabhjbjahbjbcj8367",
-          },
+          headers: getAuthHeaders(),
         },
       );
 
@@ -153,12 +150,10 @@ export default function BannerManagement({ isActive }: BannerManagementProps) {
   const handleUpdateBanner = async (updatedBanner: Banner) => {
     try {
       const response = await axios.post(
-        "https://yaro-6000-karma.offline.coffeecodes.in/v1/admin/banners/update",
+        `${apiRoute}/v1/admin/banners/update`,
         updatedBanner,
         {
-          headers: {
-            "X-Karma-Admin-Auth": "sdbsdbjdasdabhjbjahbjbcj8367",
-          },
+          headers: getAuthHeaders(),
         },
       );
 
@@ -187,12 +182,10 @@ export default function BannerManagement({ isActive }: BannerManagementProps) {
 
     try {
       const response = await axios.post(
-        "https://yaro-6000-karma.offline.coffeecodes.in/v1/admin/banners/delete",
+        `${apiRoute}/v1/admin/banners/delete`,
         { banner_id: bannerId },
         {
-          headers: {
-            "X-Karma-Admin-Auth": "sdbsdbjdasdabhjbjahbjbcj8367",
-          },
+          headers: getAuthHeaders(),
         },
       );
 

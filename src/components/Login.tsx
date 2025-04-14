@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import Link from "next/link"
 import { useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -9,35 +9,69 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useAuth } from "@/hooks/use-auth"
-import { Eye, EyeOff } from "lucide-react"
+import { Phone } from "lucide-react"
 
 export default function Login() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
+  // Phone OTP login states
+  const [phone, setPhone] = useState("")
+  const [otp, setOtp] = useState("")
+  const [otpSent, setOtpSent] = useState(false)
+  
+  // Common states
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
 
-  const { login } = useAuth()
+  const { loginWithPhone, verifyOtp } = useAuth()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handlePhoneSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setIsLoading(true)
 
     try {
-      if (email === "admin@example.com" && password === "password") {
-        await login(email, password, rememberMe)
+      if (!otpSent) {
+        // Request OTP
+        await loginWithPhone(phone)
+        setOtpSent(true)
+        setError("OTP sent successfully")
       } else {
-        setError("Invalid email or password. Try admin@example.com / password")
+        // Verify OTP
+        const result = await verifyOtp(phone, otp, rememberMe)
+        
+        // If account doesn't exist, show an error
+        if (!result.accountExists) {
+          setError("No admin account found with this phone number. Please register first.")
+          return
+        }
+        
+        // Success message will be temporary as they'll be redirected
+        setError("Login successful! Redirecting to dashboard...")
       }
-    } catch (err) {
-      setError("An error occurred during login. Please try again.")
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || "Authentication failed. Please try again.")
       console.error(err)
     } finally {
       setIsLoading(false)
     }
+  }
+
+  const handleResendOTP = async () => {
+    setIsLoading(true)
+    try {
+      await loginWithPhone(phone)
+      setError("OTP sent successfully")
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || "Failed to send OTP. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const resetOtpFlow = () => {
+    setOtpSent(false)
+    setOtp("")
+    setError("")
   }
 
   return (
@@ -51,71 +85,103 @@ export default function Login() {
 
         <Card>
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold text-center">AdminDash</CardTitle>
-            <CardDescription className="text-center">Enter your credentials to access the dashboard</CardDescription>
+            <CardTitle className="text-2xl font-bold text-center">Admin Dashboard</CardTitle>
+            <CardDescription className="text-center">Login to access the admin dashboard</CardDescription>
           </CardHeader>
           <CardContent>
-            {error && <div className="bg-red-50 text-red-600 p-3 rounded-md mb-4 text-sm">{error}</div>}
-            <form onSubmit={handleSubmit}>
+            {error && (
+              <div className={`p-3 rounded-md mb-4 text-sm ${error.includes("success") ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}>
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handlePhoneSubmit}>
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="phone" className="flex items-center gap-2">
+                    <Phone size={16} />
+                    <span>Phone Number</span>
+                  </Label>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="admin@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="phone"
+                    type="tel"
+                    placeholder="+91xxxxxxxxxx"
+                    value={phone}
+                    onChange={(e) => {
+                      setPhone(e.target.value)
+                      if (otpSent) resetOtpFlow()
+                    }}
                     required
+                    disabled={otpSent && isLoading}
                   />
                 </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    <a href="#" className="text-sm text-[#4FB372] hover:underline">
-                      Forgot password?
-                    </a>
-                  </div>
-                  <div className="relative">
+
+                {otpSent && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="otp">OTP</Label>
+                      <button 
+                        type="button" 
+                        onClick={handleResendOTP}
+                        disabled={isLoading}
+                        className="text-sm text-[#4FB372] hover:underline disabled:text-gray-400"
+                      >
+                        Resend OTP
+                      </button>
+                    </div>
                     <Input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      id="otp"
+                      type="text"
+                      placeholder="Enter OTP"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
                       required
+                      maxLength={6}
                     />
-                    <button
-                      type="button"
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
                   </div>
-                </div>
+                )}
+
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                    id="remember"
+                    id="remember-phone"
                     checked={rememberMe}
                     onCheckedChange={(checked) => setRememberMe(checked === true)}
                   />
-                  <Label htmlFor="remember" className="text-sm font-normal">
+                  <Label htmlFor="remember-phone" className="text-sm font-normal">
                     Remember me
                   </Label>
                 </div>
+
                 <Button type="submit" className="w-full bg-[#4FB372] hover:bg-[#3d9059]" disabled={isLoading}>
                   {isLoading ? (
                     <>
                       <span className="mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                      Signing in...
+                      {otpSent ? "Verifying..." : "Sending OTP..."}
                     </>
                   ) : (
-                    "Sign in"
+                    otpSent ? "Verify OTP" : "Send OTP"
                   )}
                 </Button>
+
+                {otpSent && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={resetOtpFlow}
+                    disabled={isLoading}
+                  >
+                    Change Phone Number
+                  </Button>
+                )}
               </div>
             </form>
+            
+            <div className="mt-6 text-center">
+              <Link href="/register" className="text-[#4FB372] hover:underline text-sm">
+                Don't have an admin account? Register here
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>
