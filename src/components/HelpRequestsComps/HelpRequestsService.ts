@@ -3,7 +3,6 @@ import { HelpRequest, HelpRequestResponse } from "./types";
 import { apiRoute, getAuthHeaders } from "../../lib/server"
 
 const API_BASE_URL = `${apiRoute}/v1/admin`;
-const AUTH_TOKEN = "sdbsdbjdasdabhjbjahbjbcj8367";
 
 export const HelpRequestsService = {
   getHelpRequests: async (): Promise<HelpRequest[]> => {

@@ -19,7 +19,7 @@ interface NotificationData {
   read: boolean;
   name: string;
   description: string;
-  media: any[];
+  media: string[];
   reference_id: string;
   reference_table: string;
 }

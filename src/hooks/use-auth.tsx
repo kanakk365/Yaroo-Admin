@@ -3,8 +3,7 @@
 import type React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 import axios from "axios";
-
-const API_URL =  "http://localhost:3000";
+import { apiRoute } from "@/lib/server";
 
 interface Region {
   id: string;
@@ -37,7 +36,11 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   loginWithPhone: (phone: string) => Promise<void>;
-  verifyOtp: (phone: string, otp: string, remember?: boolean) => Promise<{ success: boolean, accountExists: any, token: any }>;
+  verifyOtp: (
+    phone: string,
+    otp: string,
+    remember?: boolean
+  ) => Promise<{ success: boolean; accountExists: boolean; token: string }>;
   registerAdmin: (registerData: RegisterData) => Promise<void>;
   getRegions: () => Promise<Region[]>;
   logout: () => void;
@@ -81,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loginWithPhone = async (phone: string) => {
     try {
       const response = await axios.post(
-        `${API_URL}/v1/admin/phone_login`,
+        `${apiRoute}/v1/admin/phone_login`,
         {
           phone,
         },
@@ -95,8 +98,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       return response.data;
-    } catch (error: any) {
-      if (error.code === "ERR_NETWORK") {
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === "ERR_NETWORK") {
         console.error("Network error when attempting phone login:", error);
         throw new Error(
           "Network error: Unable to connect to the authentication service. Please check your internet connection and try again."
@@ -110,65 +113,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const verifyOtp = async (phone: string, otp: string, remember = false) => {
     try {
       console.log("Verifying OTP with:", { phone, otp });
-      
+
       const response = await axios.post(
-        `${API_URL}/v1/admin/phone_verify_otp`,
+        `${apiRoute}/v1/admin/phone_verify_otp`,
         {
           phone: phone,
-          otp: otp
+          otp: otp,
         }
       );
 
       if (response.data.success) {
         const authToken = response.data.data.token;
         const accountExists = response.data.data.account_exists;
-        
+
         setToken(authToken);
-        
+
         axios.defaults.headers.common["Authorization"] = `Bearer ${authToken}`;
 
         if (accountExists) {
           try {
-            const base64Url = authToken.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const base64Url = authToken.split(".")[1];
+            const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
             const decodedToken = JSON.parse(window.atob(base64));
-            
+
             const userData: User = {
               uid: decodedToken.uid,
               email: decodedToken.email || "",
               phone: decodedToken.phone || phone,
               region: decodedToken.region || "",
               admin: true,
-              name: decodedToken.name || ""
+              name: decodedToken.name || "",
             };
-            
+
             handleAuthSuccess(authToken, userData, remember);
           } catch (decodeError) {
             console.error("Error decoding token:", decodeError);
           }
         }
-        
+
         return {
           success: true,
           accountExists,
-          token: authToken
+          token: authToken,
         };
       }
 
       throw new Error(response.data.message || "OTP verification failed");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("OTP verification error:", error);
-      if (error.response?.data?.message) {
-        throw new Error(error.response.data.message);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: { message?: string } } };
+        if (axiosError.response?.data?.message) {
+          throw new Error(axiosError.response.data.message);
+        }
       }
-      throw error;
+      throw new Error("OTP verification failed. Please try again.");
     }
   };
 
   const registerAdmin = async (registerData: RegisterData) => {
     try {
       const response = await axios.post(
-        `${API_URL}/v1/admin/register`,
+        `${apiRoute}/v1/admin/register`,
         registerData,
         {
           headers: {
@@ -223,12 +229,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const getRegions = async (): Promise<Region[]> => {
     try {
-      const response = await axios.get(`${API_URL}/v1/regions`);
-      
+      const response = await axios.get(`${apiRoute}/v1/regions`);
+
       if (response.data.success) {
         return response.data.data.regions || [];
       }
-      
+
       throw new Error(response.data.message || "Failed to fetch regions");
     } catch (error) {
       console.error("Error fetching regions:", error);

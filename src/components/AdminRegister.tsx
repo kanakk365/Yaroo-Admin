@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Eye, EyeOff } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useAuth } from "@/hooks/use-auth"
+import Link from "next/link"
 
 export default function AdminRegister() {
   const router = useRouter()
@@ -67,11 +67,14 @@ export default function AdminRegister() {
         setPhoneVerified(true)
         setError("Phone verified successfully! Please complete registration.")
       }
-    } catch (err: any) {
-      if (err.code === 'ERR_NETWORK') {
+    } catch (err: unknown) {
+      if (typeof err === 'object' && err !== null && 'code' in err && err.code === 'ERR_NETWORK') {
         setError("Network Error: Unable to connect to the authentication service. Please check your internet connection and try again.")
+      } else if (typeof err === 'object' && err !== null) {
+        const errorObj = err as { response?: { data?: { message?: string } }, message?: string }
+        setError(errorObj.response?.data?.message || errorObj.message || "Authentication failed. Please try again.")
       } else {
-        setError(err.response?.data?.message || err.message || "Authentication failed. Please try again.")
+        setError("Authentication failed. Please try again.")
       }
       console.error(err)
     } finally {
@@ -84,8 +87,13 @@ export default function AdminRegister() {
     try {
       await loginWithPhone(phone)
       setError("OTP sent successfully")
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message || "Failed to send OTP. Please try again.")
+    } catch (err: unknown) {
+      if (typeof err === 'object' && err !== null) {
+        const errorObj = err as { response?: { data?: { message?: string } }, message?: string }
+        setError(errorObj.response?.data?.message || errorObj.message || "Failed to send OTP. Please try again.")
+      } else {
+        setError("Failed to send OTP. Please try again.")
+      }
     } finally {
       setIsLoading(false)
     }
@@ -133,7 +141,8 @@ export default function AdminRegister() {
         address,
         dob: formattedDob,
         region: FIXED_REGION_ID,
-        referral_code: referralCode || undefined
+        referral_code: referralCode || undefined,
+        token: token
       }
       
       await registerAdmin(registerData)
@@ -142,8 +151,13 @@ export default function AdminRegister() {
       setTimeout(() => {
         router.push("/")
       }, 2000)
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message || "Registration failed. Please try again.")
+    } catch (err: unknown) {
+      if (typeof err === 'object' && err !== null) {
+        const errorObj = err as { response?: { data?: { message?: string } }, message?: string }
+        setError(errorObj.response?.data?.message || errorObj.message || "Registration failed. Please try again.")
+      } else {
+        setError("Registration failed. Please try again.")
+      }
       console.error(err)
     } finally {
       setIsLoading(false)
@@ -347,9 +361,9 @@ export default function AdminRegister() {
                   </Button>
                   
                   <div className="text-center">
-                    <a href="/" className="text-[#4FB372] hover:underline text-sm">
+                  <Link href="/" className="text-[#4FB372] hover:underline text-sm">
                       Already have an account? Login
-                    </a>
+                    </Link>
                   </div>
                 </div>
               </form>

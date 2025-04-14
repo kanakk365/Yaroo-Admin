@@ -12,12 +12,10 @@ import { useAuth } from "@/hooks/use-auth"
 import { Phone } from "lucide-react"
 
 export default function Login() {
-  // Phone OTP login states
   const [phone, setPhone] = useState("")
   const [otp, setOtp] = useState("")
   const [otpSent, setOtpSent] = useState(false)
   
-  // Common states
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -31,25 +29,29 @@ export default function Login() {
 
     try {
       if (!otpSent) {
-        // Request OTP
         await loginWithPhone(phone)
         setOtpSent(true)
         setError("OTP sent successfully")
       } else {
-        // Verify OTP
         const result = await verifyOtp(phone, otp, rememberMe)
         
-        // If account doesn't exist, show an error
         if (!result.accountExists) {
           setError("No admin account found with this phone number. Please register first.")
           return
         }
         
-        // Success message will be temporary as they'll be redirected
         setError("Login successful! Redirecting to dashboard...")
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message || "Authentication failed. Please try again.")
+    } catch (err: unknown) {
+      setError(err instanceof Error 
+        ? err.message 
+        : err && typeof err === 'object' && 'response' in err 
+          ? typeof err.response === 'object' && err.response !== null && 'data' in err.response 
+            ? typeof err.response.data === 'object' && err.response.data !== null && 'message' in err.response.data && typeof err.response.data.message === 'string'
+              ? err.response.data.message
+              : "Authentication failed. Please try again."
+            : "Authentication failed. Please try again."
+          : "Authentication failed. Please try again.")
       console.error(err)
     } finally {
       setIsLoading(false)
@@ -61,8 +63,16 @@ export default function Login() {
     try {
       await loginWithPhone(phone)
       setError("OTP sent successfully")
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message || "Failed to send OTP. Please try again.")
+    } catch (err: unknown) {
+      setError(err instanceof Error 
+        ? err.message 
+        : err && typeof err === 'object' && 'response' in err 
+          ? typeof err.response === 'object' && err.response !== null && 'data' in err.response 
+            ? typeof err.response.data === 'object' && err.response.data !== null && 'message' in err.response.data && typeof err.response.data.message === 'string'
+              ? err.response.data.message
+              : "Failed to send OTP. Please try again."
+            : "Failed to send OTP. Please try again."
+          : "Failed to send OTP. Please try again.")
     } finally {
       setIsLoading(false)
     }
@@ -179,7 +189,7 @@ export default function Login() {
             
             <div className="mt-6 text-center">
               <Link href="/register" className="text-[#4FB372] hover:underline text-sm">
-                Don't have an admin account? Register here
+                Don`&apos;t have an admin account? Register here
               </Link>
             </div>
           </CardContent>
