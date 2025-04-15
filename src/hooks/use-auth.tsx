@@ -1,80 +1,270 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import axios from "axios";
+import { apiRoute } from "@/lib/server";
 
-import { createContext, useContext, useEffect, useState } from "react"
-
-interface AuthContextType {
-  isAuthenticated: boolean
-  loading: boolean
-  user: { email: string; name: string } | null
-  login: (email: string, password: string, remember?: boolean) => Promise<void>
-  logout: () => void
+interface Region {
+  id: string;
+  name: string;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+interface User {
+  uid: string;
+  email: string;
+  phone?: string;
+  region: string;
+  admin: boolean;
+  name?: string;
+}
+
+interface RegisterData {
+  id: string;
+  username: string;
+  password: string;
+  email: string;
+  address: string;
+  dob: string;
+  referral_code?: string;
+  region: string;
+}
+
+interface AuthContextType {
+  isAuthenticated: boolean;
+  loading: boolean;
+  user: User | null;
+  token: string | null;
+  loginWithPhone: (phone: string) => Promise<void>;
+  verifyOtp: (
+    phone: string,
+    otp: string,
+    remember?: boolean
+  ) => Promise<{ success: boolean; accountExists: boolean; token: string }>;
+  registerAdmin: (registerData: RegisterData) => Promise<void>;
+  getRegions: () => Promise<Region[]>;
+  logout: () => void;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const [user, setUser] = useState<{ email: string; name: string } | null>(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
-  // Check if user is already logged in (from localStorage)
   useEffect(() => {
     const checkAuth = () => {
-      const storedUser = localStorage.getItem("adminUser")
-      if (storedUser) {
+      const storedToken = localStorage.getItem("adminToken");
+      const storedUser = localStorage.getItem("adminUser");
+
+      if (storedToken && storedUser) {
         try {
-          const userData = JSON.parse(storedUser)
-          setUser(userData)
-          setIsAuthenticated(true)
+          const userData = JSON.parse(storedUser);
+          setUser(userData);
+          setToken(storedToken);
+          setIsAuthenticated(true);
+
+          axios.defaults.headers.common[
+            "Authorization"
+          ] = `Bearer ${storedToken}`;
         } catch (error) {
-          console.error("Error parsing stored user data:", error)
-          localStorage.removeItem("adminUser")
+          console.error("Error parsing stored user data:", error);
+          localStorage.removeItem("adminUser");
+          localStorage.removeItem("adminToken");
         }
       }
-      setLoading(false)
+      setLoading(false);
+    };
+
+    checkAuth();
+  }, []);
+
+  const loginWithPhone = async (phone: string) => {
+    try {
+      const response = await axios.post(
+        `${apiRoute}/v1/admin/phone_login`,
+        {
+          phone,
+        },
+        {
+          timeout: 10000,
+        }
+      );
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Failed to send OTP");
+      }
+
+      return response.data;
+    } catch (error: unknown) {
+      if (error && typeof error === 'object' && 'code' in error && error.code === "ERR_NETWORK") {
+        console.error("Network error when attempting phone login:", error);
+        throw new Error(
+          "Network error: Unable to connect to the authentication service. Please check your internet connection and try again."
+        );
+      }
+      console.error("Phone login error:", error);
+      throw error;
     }
+  };
 
-    checkAuth()
-  }, [])
+  const verifyOtp = async (phone: string, otp: string, remember = false) => {
+    try {
+      console.log("Verifying OTP with:", { phone, otp });
 
-  const login = async (email: string, password: string, remember = false) => {
-    // In a real app, you would validate credentials with an API
-    // For this example, we'll simulate a successful login
+      const response = await axios.post(
+        `${apiRoute}/v1/admin/phone_verify_otp`,
+        {
+          phone: phone,
+          otp: otp,
+        }
+      );
 
-    // Simulate API call delay
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+      if (response.data.success) {
+        const authToken = response.data.data.token;
+        const accountExists = response.data.data.account_exists;
 
-    const userData = { email, name: "Admin User" }
-    setUser(userData)
-    setIsAuthenticated(true)
+        setToken(authToken);
+
+        axios.defaults.headers.common["Authorization"] = `Bearer ${authToken}`;
+
+        if (accountExists) {
+          try {
+            const base64Url = authToken.split(".")[1];
+            const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+            const decodedToken = JSON.parse(window.atob(base64));
+
+            const userData: User = {
+              uid: decodedToken.uid,
+              email: decodedToken.email || "",
+              phone: decodedToken.phone || phone,
+              region: decodedToken.region || "",
+              admin: true,
+              name: decodedToken.name || "",
+            };
+
+            handleAuthSuccess(authToken, userData, remember);
+          } catch (decodeError) {
+            console.error("Error decoding token:", decodeError);
+          }
+        }
+
+        return {
+          success: true,
+          accountExists,
+          token: authToken,
+        };
+      }
+
+      throw new Error(response.data.message || "OTP verification failed");
+    } catch (error: unknown) {
+      console.error("OTP verification error:", error);
+      if (error && typeof error === 'object' && 'response' in error) {
+        const axiosError = error as { response?: { data?: { message?: string } } };
+        if (axiosError.response?.data?.message) {
+          throw new Error(axiosError.response.data.message);
+        }
+      }
+      throw new Error("OTP verification failed. Please try again.");
+    }
+  };
+
+  const registerAdmin = async (registerData: RegisterData) => {
+    try {
+      const response = await axios.post(
+        `${apiRoute}/v1/admin/register`,
+        registerData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.data.success) {
+        throw new Error(response.data.message || "Registration failed");
+      }
+
+      return response.data;
+    } catch (error) {
+      console.error("Registration error:", error);
+      throw error;
+    }
+  };
+
+  const handleAuthSuccess = (
+    authToken: string,
+    userData: User,
+    remember: boolean
+  ) => {
+    setToken(authToken);
+    setUser(userData);
+    setIsAuthenticated(true);
+
+    axios.defaults.headers.common["Authorization"] = `Bearer ${authToken}`;
 
     if (remember) {
-      localStorage.setItem("adminUser", JSON.stringify(userData))
+      localStorage.setItem("adminToken", authToken);
+      localStorage.setItem("adminUser", JSON.stringify(userData));
     } else {
-      // For session-only storage, we could use sessionStorage instead
-      // but for simplicity, we'll still use localStorage
-      localStorage.setItem("adminUser", JSON.stringify(userData))
+      sessionStorage.setItem("adminToken", authToken);
+      sessionStorage.setItem("adminUser", JSON.stringify(userData));
     }
-  }
+  };
 
   const logout = () => {
-    setUser(null)
-    setIsAuthenticated(false)
-    localStorage.removeItem("adminUser")
-  }
+    setUser(null);
+    setToken(null);
+    setIsAuthenticated(false);
+
+    delete axios.defaults.headers.common["Authorization"];
+
+    localStorage.removeItem("adminToken");
+    localStorage.removeItem("adminUser");
+    sessionStorage.removeItem("adminToken");
+    sessionStorage.removeItem("adminUser");
+  };
+
+  const getRegions = async (): Promise<Region[]> => {
+    try {
+      const response = await axios.get(`${apiRoute}/v1/regions`);
+
+      if (response.data.success) {
+        return response.data.data.regions || [];
+      }
+
+      throw new Error(response.data.message || "Failed to fetch regions");
+    } catch (error) {
+      console.error("Error fetching regions:", error);
+      throw error;
+    }
+  };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, loading, user, login, logout }}>{children}</AuthContext.Provider>
-  )
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        loading,
+        user,
+        token,
+        loginWithPhone,
+        verifyOtp,
+        registerAdmin,
+        getRegions,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
+  const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+    throw new Error("useAuth must be used within an AuthProvider");
   }
-  return context
+  return context;
 }
-

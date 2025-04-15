@@ -2,11 +2,12 @@
 
 import { useState } from "react"
 import { Layout } from "@/components/DashboardLayout"
-import BannerManagement from "@/components/BannerManagement"
-import HelpRequests from "@/components/HelpRequests"
-import UserStats from "@/components/UserStats"
-import Withdrawal from "@/components/Withdraw"
+import BannerManagement from "@/components/tabs/BannerManagement"
+import HelpRequests from "@/components/tabs/HelpRequests"
+import UserStats from "@/components/tabs/UserStats"
+import Withdrawal from "@/components/tabs/Withdraw"
 import { useAuth } from "@/hooks/use-auth"
+import Products from "./tabs/Products"
 
 export default function DashboardWrapper() {
   const [activeSection, setActiveSection] = useState<string>("user-stats")
@@ -19,6 +20,7 @@ export default function DashboardWrapper() {
         <BannerManagement isActive={activeSection === "banners"} />
         <HelpRequests isActive={activeSection === "help-requests"} />
         <Withdrawal isActive={activeSection === "withdrawal"} />
+        <Products isActive={activeSection==="products"} />
       </main>
     </Layout>
   )

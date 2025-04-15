@@ -1,5 +1,6 @@
-import axios from "axios"
-import { WithdrawalResponse, WithdrawalRequest } from "./types"
+import axios from "axios";
+import { WithdrawalResponse, WithdrawalRequest } from "./types";
+import { apiRoute, getAuthHeaders } from "@/lib/server";
 
 export const fetchWithdrawalRequests = async (): Promise<{
   withdrawals: WithdrawalRequest[];
@@ -7,53 +8,68 @@ export const fetchWithdrawalRequests = async (): Promise<{
 }> => {
   try {
     const response = await axios.get<WithdrawalResponse>(
-      "http://localhost:3000/v1/admin/withdrawals",
+      `${apiRoute}/v1/admin/withdrawals`,
       {
-        headers: {
-          "X-Karma-Admin-Auth": "sdbsdbjdasdabhjbjahbjbcj8367"
-        }
-      }
-    )
-    
+        headers: getAuthHeaders(),
+      },
+    );
+
     if (response.data.success) {
-      const withdrawals = response.data.data.map(withdrawal => ({
+      const withdrawals = response.data.data.map((withdrawal) => ({
         ...withdrawal,
-        status: Math.random() > 0.3 ? "pending" as const : Math.random() > 0.5 ? "approved" as const : "rejected" as const,
-        payment_method: ["Bank Transfer", "PayPal", "Crypto"][Math.floor(Math.random() * 3)],
-        payment_details: ["HDFC Bank", "user@example.com", "Bitcoin (BTC)"][Math.floor(Math.random() * 3)]
-      }))
-      
-      return { withdrawals, error: null }
+        status:
+          Math.random() > 0.3
+            ? ("pending" as const)
+            : Math.random() > 0.5
+              ? ("approved" as const)
+              : ("rejected" as const),
+        payment_method: ["Bank Transfer", "PayPal", "Crypto"][
+          Math.floor(Math.random() * 3)
+        ],
+        payment_details: ["HDFC Bank", "user@example.com", "Bitcoin (BTC)"][
+          Math.floor(Math.random() * 3)
+        ],
+      }));
+
+      return { withdrawals, error: null };
     } else {
-      return { 
-        withdrawals: [], 
-        error: response.data.message || "Failed to fetch withdrawal requests" 
-      }
+      return {
+        withdrawals: [],
+        error: response.data.message || "Failed to fetch withdrawal requests",
+      };
     }
   } catch (err) {
-    console.error("Error fetching withdrawal requests:", err)
-    return { 
-      withdrawals: [], 
-      error: "Error connecting to the server. Please try again later." 
-    }
+    console.error("Error fetching withdrawal requests:", err);
+    return {
+      withdrawals: [],
+      error: "Error connecting to the server. Please try again later.",
+    };
   }
-}
+};
 
 export const formatDate = (dateString: string) => {
-  const date = new Date(dateString)
-  const today = new Date()
-  const yesterday = new Date(today)
-  yesterday.setDate(yesterday.getDate() - 1)
-  
+  const date = new Date(dateString);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(yesterday.getDate() - 1);
+
   if (date.toDateString() === today.toDateString()) {
-    return "Today"
+    return "Today";
   } else if (date.toDateString() === yesterday.toDateString()) {
-    return "Yesterday"
+    return "Yesterday";
   } else {
-    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   }
-}
+};
 
 export const formatTime = (dateString: string) => {
-  return new Date(dateString).toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true })
-}
+  return new Date(dateString).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+  });
+};
